@@ -1,0 +1,65 @@
+const DRIVE_API = 'https://www.googleapis.com/drive/v3'
+const UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3'
+const FILE_NAME = 'treatments.json'
+
+async function req(url, options = {}) {
+  const token = window.__accessToken
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(options.headers || {}),
+    },
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Drive API error ${res.status}: ${text}`)
+  }
+  const ct = res.headers.get('content-type') || ''
+  if (ct.includes('application/json')) return res.json()
+  return res.text()
+}
+
+async function findFile() {
+  const q = encodeURIComponent(`name='${FILE_NAME}' and trashed=false`)
+  const data = await req(`${DRIVE_API}/files?q=${q}&fields=files(id,name)`)
+  return data.files?.[0] ?? null
+}
+
+export async function loadTreatments() {
+  const file = await findFile()
+  if (!file) return { version: 1, treatments: [] }
+  const text = await req(`${DRIVE_API}/files/${file.id}?alt=media`)
+  try {
+    return JSON.parse(text)
+  } catch {
+    return { version: 1, treatments: [] }
+  }
+}
+
+export async function saveTreatments(data) {
+  const body = JSON.stringify(data, null, 2)
+  const blob = new Blob([body], { type: 'application/json' })
+  const file = await findFile()
+
+  if (file) {
+    await req(`${UPLOAD_API}/files/${file.id}?uploadType=media`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: blob,
+    })
+  } else {
+    const meta = JSON.stringify({ name: FILE_NAME, mimeType: 'application/json' })
+    const form = new FormData()
+    form.append('metadata', new Blob([meta], { type: 'application/json' }))
+    form.append('file', blob)
+    await req(`${UPLOAD_API}/files?uploadType=multipart`, {
+      method: 'POST',
+      body: form,
+    })
+  }
+}
+
+export function driveViewUrl(fileId) {
+  return `https://drive.google.com/file/d/${fileId}/view`
+}
