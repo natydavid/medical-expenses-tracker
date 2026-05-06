@@ -10,6 +10,7 @@ function newTreatment() {
     date: new Date().toISOString().slice(0, 10),
     type: 'physiotherapy',
     provider: '',
+    receiptId: '',
     description: '',
     cost: '',
     refund_ins1: '',
@@ -232,15 +233,27 @@ export default function TreatmentModal({ treatment, onSave, onDelete, onClose })
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Provider / Clinic</label>
-                <input
-                  type="text"
-                  value={form.provider}
-                  onChange={e => set('provider', e.target.value)}
-                  placeholder="e.g. Maccabi Physiotherapy Clinic"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Provider / Clinic</label>
+                  <input
+                    type="text"
+                    value={form.provider}
+                    onChange={e => set('provider', e.target.value)}
+                    placeholder="e.g. Maccabi Physiotherapy"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Receipt ID <span className="text-gray-400 font-normal">(optional)</span></label>
+                  <input
+                    type="text"
+                    value={form.receiptId}
+                    onChange={e => set('receiptId', e.target.value)}
+                    placeholder="e.g. 12345"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  />
+                </div>
               </div>
 
               <div>

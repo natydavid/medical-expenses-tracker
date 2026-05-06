@@ -56,7 +56,7 @@ async function ensureFolderPath(pathParts) {
 
 // Derive the canonical Drive folder path string from a treatment object
 export function computeFolderPath(treatment) {
-  const { date, type, provider, id } = treatment
+  const { date, type, provider, id, receiptId } = treatment
   const [yr, mo, dy] = (date || new Date().toISOString().slice(0, 10)).split('-')
   const typeNorm = type
     ? type.charAt(0).toUpperCase() + type.slice(1)
@@ -67,8 +67,11 @@ export function computeFolderPath(treatment) {
     .replace(/[^a-zA-Z0-9_֐-׿-]/g, '') // keep Hebrew chars too
     || 'Unknown'
   const ddMM = `${dy}-${mo}`
-  const uuid6 = (id || crypto.randomUUID()).replace(/-/g, '').slice(0, 6)
-  return `MedicalExpenses/${yr}/${typeNorm}/${providerNorm}/treatment-${ddMM}-${uuid6}`
+  // Prefer the receipt ID (unique per provider) over the UUID suffix
+  const identifier = receiptId
+    ? String(receiptId).trim().replace(/[^a-zA-Z0-9_-]/g, '')
+    : (id || crypto.randomUUID()).replace(/-/g, '').slice(0, 6)
+  return `MedicalExpenses/${yr}/${typeNorm}/${providerNorm}/treatment-${ddMM}-${identifier}`
 }
 
 // Upload a local File object to the treatment's folder in Drive
