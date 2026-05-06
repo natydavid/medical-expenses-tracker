@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 
-const SCOPES = [
-  'https://www.googleapis.com/auth/drive.file',
-  'https://www.googleapis.com/auth/drive.readonly',
-].join(' ')
+// drive.file: create/read/write files and folders the app creates
+const SCOPES = 'https://www.googleapis.com/auth/drive.file'
 
 export function useGoogleAuth() {
   const [accessToken, setAccessToken] = useState(null)
