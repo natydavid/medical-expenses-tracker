@@ -102,11 +102,19 @@ async function findDataFile() {
 export async function loadTreatments() {
   const file = await findDataFile()
   if (!file) return { version: 1, treatments: [] }
-  const text = await req(`${DRIVE_API}/files/${file.id}?alt=media`)
+
+  // req() inspects Content-Type and calls res.json() for application/json responses.
+  // treatments.json is stored as application/json, so Drive returns it already parsed —
+  // calling JSON.parse() on the result would coerce the object to "[object Object]" and throw.
+  const result = await req(`${DRIVE_API}/files/${file.id}?alt=media`)
+  if (typeof result !== 'string') return result
+
+  // Fallback: if somehow the response came back as plain text, parse it manually.
+  // Throw rather than silently returning empty so useDrive surfaces the error.
   try {
-    return JSON.parse(text)
+    return JSON.parse(result)
   } catch {
-    return { version: 1, treatments: [] }
+    throw new Error('treatments.json could not be parsed — the file may be corrupted.')
   }
 }
 

@@ -12,7 +12,7 @@ export function AppProvider({ children }) {
     if (auth.accessToken) {
       drive.load()
     }
-  }, [auth.accessToken])
+  }, [auth.accessToken, drive.load])
 
   return (
     <AppContext.Provider value={{ auth, drive }}>

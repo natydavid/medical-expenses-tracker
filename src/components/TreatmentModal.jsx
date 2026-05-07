@@ -188,7 +188,11 @@ export default function TreatmentModal({ treatment, onSave, onDelete, onClose })
   const sent1AutoLocked = form.files.some(f => f.role === 'approval_ins1')
   const sent2AutoLocked = form.files.some(f => f.role === 'approval_ins2')
   const anyUploading = Object.values(uploading).some(Boolean)
-  const folderPreview = computeFolderPath(form)
+  // Show the folder that will actually be used for uploads:
+  // if driveFolder is already locked (a file was uploaded), show that —
+  // not a recomputed path that would give the user a false impression
+  // that changing receiptId after uploading will change the Drive folder.
+  const folderPreview = form.driveFolder || computeFolderPath(form)
 
   return (
     <>
@@ -249,7 +253,14 @@ export default function TreatmentModal({ treatment, onSave, onDelete, onClose })
                   <input
                     type="text"
                     value={form.receiptId}
-                    onChange={e => set('receiptId', e.target.value)}
+                    onChange={e => setForm(f => ({
+                      ...f,
+                      receiptId: e.target.value,
+                      // If no files have been uploaded yet, clear driveFolder so the next
+                      // upload computes the path fresh (picking up the new receiptId).
+                      // If files already exist in Drive we can't move them, so leave it.
+                      driveFolder: f.files.length === 0 ? null : f.driveFolder,
+                    }))}
                     placeholder="e.g. 12345"
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
                   />
