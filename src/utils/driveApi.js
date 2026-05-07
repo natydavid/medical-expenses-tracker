@@ -144,3 +144,22 @@ export async function saveTreatments(data) {
 export function driveViewUrl(fileId) {
   return `https://drive.google.com/file/d/${fileId}/view`
 }
+
+// Delete the treatment's leaf Drive folder (and every file inside it).
+// Walks driveFolder path to find the folder ID, then issues a permanent DELETE.
+// Returns silently if the folder doesn't exist on Drive.
+export async function deleteTreatmentFolder(driveFolder) {
+  if (!driveFolder) return
+  const pathParts = driveFolder.split('/')
+  let parentId = 'root'
+  let leafId = null
+  for (const part of pathParts) {
+    const item = await findItem(part, parentId, 'application/vnd.google-apps.folder')
+    if (!item) return  // folder already gone — nothing to do
+    leafId = item.id
+    parentId = item.id
+  }
+  if (leafId) {
+    await req(`${DRIVE_API}/files/${leafId}`, { method: 'DELETE' })
+  }
+}

@@ -178,7 +178,7 @@ export default function TreatmentModal({ treatment, onSave, onDelete, onClose })
   const handleDelete = () => {
     setConfirm({
       title: 'Delete Treatment',
-      message: 'Permanently delete this treatment? Files in Google Drive will remain.',
+      message: 'Permanently delete this treatment? Its Drive folder and all uploaded files will also be permanently removed.',
       onConfirm: () => { setConfirm(null); onDelete(form.id) },
       danger: true,
       confirmLabel: 'Delete',

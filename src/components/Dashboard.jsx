@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
 import { isComplete, isInProgress } from '../utils/progressHelpers'
+import { deleteTreatmentFolder } from '../utils/driveApi'
 import TotalsPanel from './TotalsPanel'
 import MonthlyChart from './MonthlyChart'
 import FilterBar from './FilterBar'
@@ -52,7 +53,13 @@ export default function Dashboard() {
   }
 
   const handleDelete = async (id) => {
+    const treatment = drive.treatments.find(t => t.id === id)
     await drive.save(drive.treatments.filter(t => t.id !== id))
+    // Delete the Drive folder after the JSON is updated so a Drive failure
+    // never leaves a phantom record in the app.
+    if (treatment?.driveFolder) {
+      try { await deleteTreatmentFolder(treatment.driveFolder) } catch {}
+    }
     closeModal()
   }
 
