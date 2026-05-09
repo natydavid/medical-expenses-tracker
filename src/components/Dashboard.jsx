@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
 import { isComplete, isInProgress } from '../utils/progressHelpers'
-import { deleteTreatmentFolder } from '../utils/driveApi'
+import { deleteTreatmentFolder, moveTreatmentFiles, computeFolderPath } from '../utils/driveApi'
 import TotalsPanel from './TotalsPanel'
 import MonthlyChart from './MonthlyChart'
 import FilterBar from './FilterBar'
@@ -45,9 +45,31 @@ export default function Dashboard() {
 
   const handleSave = async (updated) => {
     const exists = drive.treatments.find(t => t.id === updated.id)
+    let treatmentToSave = updated
+
+    if (exists && updated.driveFolder) {
+      const newFolder = computeFolderPath(updated)
+      if (newFolder !== updated.driveFolder) {
+        if (updated.files.length > 0) {
+          // Path-affecting fields changed and files exist — move them to the new folder.
+          // On failure keep the old driveFolder so files remain accessible.
+          try {
+            const moved = await moveTreatmentFiles(updated.driveFolder, newFolder, updated.files)
+            treatmentToSave = { ...updated, driveFolder: moved }
+          } catch {
+            treatmentToSave = updated
+          }
+        } else {
+          // No files to move — clear driveFolder so the next upload recomputes
+          // the path from the current fields instead of using the stale path.
+          treatmentToSave = { ...updated, driveFolder: null }
+        }
+      }
+    }
+
     const next = exists
-      ? drive.treatments.map(t => t.id === updated.id ? updated : t)
-      : [...drive.treatments, updated]
+      ? drive.treatments.map(t => t.id === updated.id ? treatmentToSave : t)
+      : [...drive.treatments, treatmentToSave]
     await drive.save(next)
     closeModal()
   }

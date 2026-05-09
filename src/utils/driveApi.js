@@ -145,6 +145,50 @@ export function driveViewUrl(fileId) {
   return `https://drive.google.com/file/d/${fileId}/view`
 }
 
+// Move all tracked files from oldFolder to newFolder on Drive.
+// Resolves the old folder ID by walking its path, creates the new folder
+// hierarchy (find-or-create), moves each file via addParents/removeParents,
+// then deletes the old folder if no children remain.
+export async function moveTreatmentFiles(oldFolder, newFolder, files) {
+  if (!oldFolder || !newFolder || oldFolder === newFolder) return newFolder
+
+  // Resolve the old leaf folder's Drive ID
+  const oldPathParts = oldFolder.split('/')
+  let parentId = 'root'
+  let oldFolderId = null
+  for (const part of oldPathParts) {
+    const item = await findItem(part, parentId, 'application/vnd.google-apps.folder')
+    if (!item) {
+      // Old folder gone already — just create the new path and return
+      await ensureFolderPath(newFolder.split('/'))
+      return newFolder
+    }
+    oldFolderId = item.id
+    parentId = item.id
+  }
+
+  // Create the new folder hierarchy (find-or-create each level)
+  const newFolderId = await ensureFolderPath(newFolder.split('/'))
+
+  // Move each tracked file: add new parent, remove old parent
+  for (const file of files) {
+    await req(
+      `${DRIVE_API}/files/${file.fileId}?addParents=${newFolderId}&removeParents=${oldFolderId}&fields=id`,
+      { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}' }
+    )
+  }
+
+  // Delete the old folder if it has no remaining children visible to the app
+  const remaining = await req(
+    `${DRIVE_API}/files?q=${encodeURIComponent(`'${oldFolderId}' in parents and trashed=false`)}&fields=files(id)&pageSize=1`
+  )
+  if (!remaining.files?.length) {
+    await req(`${DRIVE_API}/files/${oldFolderId}`, { method: 'DELETE' })
+  }
+
+  return newFolder
+}
+
 // Delete the treatment's leaf Drive folder (and every file inside it).
 // Walks driveFolder path to find the folder ID, then issues a permanent DELETE.
 // Returns silently if the folder doesn't exist on Drive.

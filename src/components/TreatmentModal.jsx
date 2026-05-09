@@ -188,11 +188,7 @@ export default function TreatmentModal({ treatment, onSave, onDelete, onClose })
   const sent1AutoLocked = form.files.some(f => f.role === 'approval_ins1')
   const sent2AutoLocked = form.files.some(f => f.role === 'approval_ins2')
   const anyUploading = Object.values(uploading).some(Boolean)
-  // Show the folder that will actually be used for uploads:
-  // if driveFolder is already locked (a file was uploaded), show that —
-  // not a recomputed path that would give the user a false impression
-  // that changing receiptId after uploading will change the Drive folder.
-  const folderPreview = form.driveFolder || computeFolderPath(form)
+  const folderPreview = computeFolderPath(form)
 
   return (
     <>
