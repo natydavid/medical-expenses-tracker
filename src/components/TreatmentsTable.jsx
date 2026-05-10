@@ -20,6 +20,7 @@ export default function TreatmentsTable({ treatments, onEdit, onArchive }) {
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -81,6 +82,7 @@ export default function TreatmentsTable({ treatments, onEdit, onArchive }) {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }
