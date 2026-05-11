@@ -20,18 +20,19 @@ function newTreatment() {
     sent_ins1: false,
     sent_ins2: false,
     driveFolder: null,
+    insurers: 2,
   }
 }
 
 // Normalise treatments that were saved in the old format (flat receipt/approval fields)
 function normalise(t) {
-  if (t.files) return { ...t }
+  if (t.files) return { ...t, insurers: t.insurers ?? 2 }
   const files = []
   if (t.receipt)       files.push({ role: 'receipt',      fileId: t.receipt.fileId,      name: t.receipt.name })
   if (t.approval_ins1) files.push({ role: 'approval_ins1', fileId: t.approval_ins1.fileId, name: t.approval_ins1.name })
   if (t.approval_ins2) files.push({ role: 'approval_ins2', fileId: t.approval_ins2.fileId, name: t.approval_ins2.name })
   const { receipt, approval_ins1, approval_ins2, ...rest } = t
-  return { ...rest, files, driveFolder: null }
+  return { ...rest, files, driveFolder: null, insurers: t.insurers ?? 2 }
 }
 
 const ROLE_LABELS = {
@@ -209,7 +210,7 @@ export default function TreatmentModal({ treatment, onSave, onDelete, onClose })
             <section className="flex flex-col gap-4">
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Details</h3>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
                   <input
@@ -229,6 +230,17 @@ export default function TreatmentModal({ treatment, onSave, onDelete, onClose })
                   >
                     <option value="physiotherapy">Physiotherapy</option>
                     <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Insurers</label>
+                  <select
+                    value={form.insurers}
+                    onChange={e => set('insurers', Number(e.target.value))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  >
+                    <option value={1}>1</option>
+                    <option value={2}>2</option>
                   </select>
                 </div>
               </div>
@@ -274,8 +286,8 @@ export default function TreatmentModal({ treatment, onSave, onDelete, onClose })
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                {[['cost', 'Cost (₪)'], ['refund_ins1', 'Refund Ins. 1 (₪)'], ['refund_ins2', 'Refund Ins. 2 (₪)']].map(([key, label]) => (
+              <div className={`grid gap-4 ${form.insurers === 1 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                {[['cost', 'Cost (₪)'], ['refund_ins1', 'Refund Ins. 1 (₪)'], ...(form.insurers === 2 ? [['refund_ins2', 'Refund Ins. 2 (₪)']] : [])].map(([key, label]) => (
                   <div key={key}>
                     <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
                     <input
@@ -337,23 +349,27 @@ export default function TreatmentModal({ treatment, onSave, onDelete, onClose })
                   onRemove={handleRemove}
                 />
 
-                {/* Step 4 — Sent to Ins. 2 */}
-                <SentRow
-                  id="sent_ins2"
-                  checked={form.sent_ins2}
-                  autoLocked={sent2AutoLocked}
-                  label="Sent to Insurer 2"
-                  onChange={() => handleSentToggle('sent_ins2')}
-                />
+                {form.insurers === 2 && (
+                  <>
+                    {/* Step 4 — Sent to Ins. 2 */}
+                    <SentRow
+                      id="sent_ins2"
+                      checked={form.sent_ins2}
+                      autoLocked={sent2AutoLocked}
+                      label="Sent to Insurer 2"
+                      onChange={() => handleSentToggle('sent_ins2')}
+                    />
 
-                {/* Step 5 — Approval Ins. 2 */}
-                <FileUploadRow
-                  role="approval_ins2"
-                  file={getFile('approval_ins2')}
-                  uploading={uploading['approval_ins2']}
-                  onUpload={handleUpload}
-                  onRemove={handleRemove}
-                />
+                    {/* Step 5 — Approval Ins. 2 */}
+                    <FileUploadRow
+                      role="approval_ins2"
+                      file={getFile('approval_ins2')}
+                      uploading={uploading['approval_ins2']}
+                      onUpload={handleUpload}
+                      onRemove={handleRemove}
+                    />
+                  </>
+                )}
               </div>
             </section>
 

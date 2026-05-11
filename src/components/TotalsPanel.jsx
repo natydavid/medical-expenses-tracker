@@ -13,7 +13,10 @@ function Card({ label, amount, color }) {
 export default function TotalsPanel({ treatments }) {
   const active = treatments.filter(t => !t.archived)
   const spent = active.reduce((s, t) => s + (t.cost || 0), 0)
-  const refunded = active.reduce((s, t) => s + (t.refund_ins1 || 0) + (t.refund_ins2 || 0), 0)
+  const refunded = active.reduce((s, t) => {
+    const ins = t.insurers ?? 2
+    return s + (t.refund_ins1 || 0) + (ins === 2 ? (t.refund_ins2 || 0) : 0)
+  }, 0)
   const outstanding = spent - refunded
 
   return (

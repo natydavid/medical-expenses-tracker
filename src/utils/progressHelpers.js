@@ -15,13 +15,20 @@ export function computeSteps(treatment) {
   const hasReceipt   = files.some(f => f.role === 'receipt')
   const hasApproval1 = files.some(f => f.role === 'approval_ins1')
   const hasApproval2 = files.some(f => f.role === 'approval_ins2')
-  return [
+  const insurers = treatment.insurers ?? 2
+
+  const steps = [
     { label: 'Receipt',    done: hasReceipt },
     { label: 'Sent 1',     done: !!treatment.sent_ins1 || hasApproval1 },
     { label: 'Approved 1', done: hasApproval1 },
-    { label: 'Sent 2',     done: !!treatment.sent_ins2 || hasApproval2 },
-    { label: 'Approved 2', done: hasApproval2 },
   ]
+  if (insurers === 2) {
+    steps.push(
+      { label: 'Sent 2',     done: !!treatment.sent_ins2 || hasApproval2 },
+      { label: 'Approved 2', done: hasApproval2 },
+    )
+  }
+  return steps
 }
 
 export function isComplete(treatment) {
@@ -35,9 +42,12 @@ export function isInProgress(treatment) {
 
 export function applyAutoSent(treatment) {
   const files = getFiles(treatment)
+  const insurers = treatment.insurers ?? 2
   return {
     ...treatment,
     sent_ins1: treatment.sent_ins1 || files.some(f => f.role === 'approval_ins1'),
-    sent_ins2: treatment.sent_ins2 || files.some(f => f.role === 'approval_ins2'),
+    sent_ins2: insurers === 2
+      ? (treatment.sent_ins2 || files.some(f => f.role === 'approval_ins2'))
+      : treatment.sent_ins2,
   }
 }
