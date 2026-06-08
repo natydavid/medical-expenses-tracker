@@ -3,6 +3,7 @@ import { useUpload } from '../hooks/useUpload'
 import { applyAutoSent } from '../utils/progressHelpers'
 import { driveViewUrl, computeFolderPath } from '../utils/driveApi'
 import ConfirmDialog from './ConfirmDialog'
+import Combobox from './Combobox'
 
 function newTreatment() {
   return {
@@ -128,7 +129,7 @@ function SentRow({ id, checked, autoLocked, label, onChange }) {
   )
 }
 
-export default function TreatmentModal({ treatment, onSave, onDelete, onClose }) {
+export default function TreatmentModal({ treatment, onSave, onDelete, onClose, knownProviders = [] }) {
   const isNew = !treatment?.id
   const [form, setForm] = useState(() => isNew ? newTreatment() : normalise(treatment))
   const [confirm, setConfirm] = useState(null)
@@ -248,10 +249,10 @@ export default function TreatmentModal({ treatment, onSave, onDelete, onClose })
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Provider / Clinic</label>
-                  <input
-                    type="text"
+                  <Combobox
                     value={form.provider}
-                    onChange={e => set('provider', e.target.value)}
+                    onChange={v => set('provider', v)}
+                    options={knownProviders}
                     placeholder="e.g. Maccabi Physiotherapy"
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
                   />

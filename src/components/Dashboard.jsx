@@ -39,6 +39,14 @@ export default function Dashboard() {
     [drive.treatments, filters, archiveMode]
   )
 
+  const knownProviders = useMemo(() => {
+    const seen = new Set()
+    for (const t of drive.treatments) {
+      if (t.provider?.trim()) seen.add(t.provider.trim())
+    }
+    return [...seen].sort((a, b) => a.localeCompare(b))
+  }, [drive.treatments])
+
   const openNew = () => { setEditTarget(null); setShowModal(true) }
   const openEdit = (t) => { setEditTarget(t); setShowModal(true) }
   const closeModal = () => { setShowModal(false); setEditTarget(null) }
@@ -160,6 +168,7 @@ export default function Dashboard() {
           onSave={handleSave}
           onDelete={handleDelete}
           onClose={closeModal}
+          knownProviders={knownProviders}
         />
       )}
 
