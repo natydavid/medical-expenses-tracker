@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { loadTreatments, saveTreatments } from '../utils/driveApi'
 
-export function useDrive() {
+export function useDrive(onAuthError) {
   const [treatments, setTreatments] = useState([])
   const [loaded, setLoaded] = useState(false)
   const [syncing, setSyncing] = useState(false)
@@ -15,12 +15,15 @@ export function useDrive() {
       setTreatments(data.treatments || [])
       setLoaded(true)
     } catch (e) {
-      // Surface the error — never silently fall back to empty data
-      setError(e.message)
+      if (e.status === 401 && onAuthError) {
+        onAuthError()
+      } else {
+        setError(e.message)
+      }
     } finally {
       setSyncing(false)
     }
-  }, [])
+  }, [onAuthError])
 
   const save = useCallback(async (updatedTreatments) => {
     setSyncing(true)

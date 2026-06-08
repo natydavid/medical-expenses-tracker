@@ -6,7 +6,7 @@ const AppContext = createContext(null)
 
 export function AppProvider({ children }) {
   const auth = useGoogleAuth()
-  const drive = useDrive()
+  const drive = useDrive(auth.signOut)
 
   useEffect(() => {
     if (auth.accessToken) {

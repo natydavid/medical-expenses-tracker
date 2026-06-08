@@ -13,7 +13,9 @@ async function req(url, options = {}) {
   })
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(`Drive API error ${res.status}: ${text}`)
+    const err = new Error(`Drive API error ${res.status}: ${text}`)
+    err.status = res.status
+    throw err
   }
   const ct = res.headers.get('content-type') || ''
   if (ct.includes('application/json')) return res.json()
